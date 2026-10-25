@@ -33,8 +33,15 @@
   const state = params.get('state') || '';
   let target = null;
   try {
-    const b64 = state.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const origin = new URL(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)));
+    // state = jeton + « x » + adresse du dashboard en hexadécimal (ancien format : jeton + « . » + base64)
+    let raw;
+    const hex = /^[0-9a-f]{32}x([0-9a-f]+)$/.exec(state);
+    if (hex) raw = hex[1].match(/../g).map(h => String.fromCharCode(parseInt(h, 16))).join('');
+    else {
+      const b64 = state.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      raw = atob(b64 + '='.repeat((4 - b64.length % 4) % 4));
+    }
+    const origin = new URL(raw);
     const h = origin.hostname;
     const local = /^(localhost|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/.test(h)
       || /\.(local|localhost|orb\.local)$/.test(h);
