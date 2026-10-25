@@ -35,8 +35,12 @@
   try {
     // state = jeton + « x » + adresse du dashboard en hexadécimal (ancien format : jeton + « . » + base64)
     let raw;
-    const hex = /^[0-9a-f]{32}x([0-9a-f]+)$/.exec(state);
-    if (hex) raw = hex[1].match(/../g).map(h => String.fromCharCode(parseInt(h, 16))).join('');
+    const ip = /^[0-9a-f]{16}xi([0-9a-f]{12})$/.exec(state);   // adresse IPv4 + port compacte
+    const hex = /^[0-9a-f]{16,32}x([0-9a-f]+)$/.exec(state);   // adresse complète en hexadécimal
+    if (ip) {
+      const b = ip[1].match(/../g).map(h => parseInt(h, 16));
+      raw = `http://${b.slice(0, 4).join('.')}:${b[4] * 256 + b[5]}`;
+    } else if (hex) raw = hex[1].match(/../g).map(h => String.fromCharCode(parseInt(h, 16))).join('');
     else {
       const b64 = state.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
       raw = atob(b64 + '='.repeat((4 - b64.length % 4) % 4));
