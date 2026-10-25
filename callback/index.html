@@ -22,6 +22,7 @@
 <main><div class="card">
   <h1 id="title">Retour vers ton dashboard…</h1>
   <p id="help">TikTok a répondu ; tu vas être redirigé vers ton dashboard Podcast Clips.</p>
+  <p id="manual" hidden><a id="go" href="#" style="display:inline-block;background:#fe2c55;color:#fff;padding:10px 16px;border-radius:9px;text-decoration:none;font-weight:600">Continuer vers le dashboard</a></p>
   <textarea id="url" readonly hidden></textarea>
 </div></main>
 <script>
@@ -41,7 +42,14 @@
   } catch (e) { /* state absent ou illisible */ }
 
   if (target) {
-    location.replace(target + '/webhook/clips/tiktok-callback' + location.search);
+    const next = target + '/webhook/clips/tiktok-callback' + location.search;
+    // certains navigateurs bloquent la redirection automatique d'un site public vers le réseau local :
+    // le bouton (clic de l'utilisateur) reste alors possible
+    document.getElementById('go').href = next;
+    document.getElementById('manual').hidden = false;
+    document.getElementById('help').textContent =
+      "TikTok a répondu. Si ton dashboard ne s'ouvre pas tout seul dans quelques secondes, clique sur le bouton.";
+    location.replace(next);
   } else {
     document.getElementById('title').textContent = params.get('code') || params.get('error')
       ? 'Retour TikTok reçu' : 'Podcast Clips — page de retour TikTok';
