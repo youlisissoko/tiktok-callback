@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Connexion TikTok — Podcast Clips</title>
+<style>
+  :root { --bg: #f6f6f7; --card: #fff; --text: #16161a; --muted: #5c5c66; --accent: #fe2c55; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #121214; --card: #1d1d21; --text: #f1f1f3; --muted: #a0a0aa; } }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 600px; margin: 48px auto; padding: 0 16px; }
+  .card { background: var(--card); border-radius: 14px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  h1 { font-size: 21px; margin: 0 0 8px; }
+  p { color: var(--muted); }
+  textarea { width: 100%; box-sizing: border-box; min-height: 90px; font: 13px/1.4 ui-monospace, monospace; padding: 10px;
+             border-radius: 8px; border: 1px solid #8884; background: transparent; color: var(--text); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main><div class="card">
+  <h1 id="title">Retour vers ton dashboard…</h1>
+  <p id="help">TikTok a répondu ; tu vas être redirigé vers ton dashboard Podcast Clips.</p>
+  <textarea id="url" readonly hidden></textarea>
+</div></main>
+<script>
+  // Page de retour (Redirect URI) de l'app TikTok « Podcast Clips ».
+  // Elle ne stocke ni ne transmet rien elle-même : elle renvoie le navigateur vers le dashboard du créateur,
+  // dont l'adresse (réseau local uniquement) est inscrite dans le paramètre « state » créé par ce dashboard.
+  const params = new URLSearchParams(location.search);
+  const state = params.get('state') || '';
+  let target = null;
+  try {
+    const b64 = state.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const origin = new URL(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)));
+    const h = origin.hostname;
+    const local = /^(localhost|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/.test(h)
+      || /\.(local|localhost|orb\.local)$/.test(h);
+    if (['http:', 'https:'].includes(origin.protocol) && local) target = origin.origin;
+  } catch (e) { /* state absent ou illisible */ }
+
+  if (target) {
+    location.replace(target + '/webhook/clips/tiktok-callback' + location.search);
+  } else {
+    document.getElementById('title').textContent = params.get('code') || params.get('error')
+      ? 'Retour TikTok reçu' : 'Podcast Clips — page de retour TikTok';
+    document.getElementById('help').innerHTML = params.get('code') || params.get('error')
+      ? "Impossible de retrouver ton dashboard automatiquement. Copie l'adresse ci-dessous et relance la connexion depuis le dashboard."
+      : 'Cette page sert de Redirect URI à l\'app TikTok « Podcast Clips ». <a href="../">Accueil</a>';
+    if (params.get('code') || params.get('error')) {
+      const box = document.getElementById('url');
+      box.hidden = false; box.value = location.href;
+    }
+  }
+</script>
+</body>
+</html>
